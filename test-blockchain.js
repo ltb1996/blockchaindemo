@@ -6,7 +6,7 @@ console.log('=== 区块链测试开始 ===\n');
 try {
   // 测试1: 创世区块
   console.log('1. 测试创世区块:');
-  const genesis = Block.genesis();
+  const genesis = Block.genesis;
   console.log('  - 索引:', genesis.index);
   console.log('  - 数据:', genesis.data);
   console.log('  - 哈希:', genesis.hash);
