@@ -16,7 +16,7 @@ class Blockchain {
     }
 
     isValidHashDifficulty(hash) {
-        for (let i = 0; i < hash.length; i++) {
+        for (var i = 0; i < hash.length; i++) {
             if (hash[i] !== '0') {
                 break;
             }
@@ -40,11 +40,6 @@ class Blockchain {
     }
 
     mine(data) {
-        // const nextIndex = this.latestBlock.index + 1;
-        // const previousHash = this.latestBlock.hash;
-        // let timestamp = new Date().getTime();
-        // let nonce = 0;
-        // let nextHash = this.calculateHash(nextIndex, previousHash, timestamp, data, nonce);
         const newBlock = this.generateNextBlock(data);
         try {
             this.addBlock(newBlock);
@@ -71,8 +66,8 @@ class Blockchain {
             previousHash,
             timestamp,
             data,
-            nonce,
-            nextHash
+            nextHash,
+            nonce
         );
 
         return nextBlock;
@@ -92,7 +87,7 @@ class Blockchain {
 
         if (previousBlock.index + 1 !== nextBlock.index) {
             return false;
-        } else if (previousBlock.hash !== nextBlock.index) {
+        } else if (previousBlock.hash !== nextBlock.previousHash) {
             return false;
         } else if (nextBlockHash !== nextBlock.hash) {
             return false;
@@ -102,7 +97,7 @@ class Blockchain {
             return true;
         }
     }
-    
+
     isValidChain(chain) {
         if (JSON.stringify(chain[0]) !== JSON.stringify(Block.genesis)) {
             return false;
@@ -128,7 +123,7 @@ class Blockchain {
     replaceChain(newChain) {
         if (this.isValidChain(newChain) && this.isChainLonger(newChain)) {
             this.blockchain = JSON.parse(JSON.stringify(newChain));
-        }else {
+        } else {
             throw "Error: Invalid Chain";
         }
     }
