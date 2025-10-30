@@ -13,7 +13,7 @@ class PeerToPeer {
     constructor(blcokchain) {
         this.peers = []; // 存储已连接的节点
         this.blockchain = blcokchain; // 引用区块链实例
-    }    
+    }
     // 启动服务器监听指定端口
     startServer(port) {
         const server = net.createServer((socket) => {
@@ -21,10 +21,18 @@ class PeerToPeer {
         }).listen(port); // 监听指定端口
         console.log(`Server started on port ${port}`);
     }
-     // 连接到指定的对等节点
+    // 发现对等节点功能（当前版本未实现）
+    discoverPeers() {
+        // 发现对等节点功能已移除，需要手动连接节点
+        console.log("发现对等节点功能需要手动实现，请使用 'connect' 命令连接其他节点");
+    }
+    // 连接到指定的对等节点
     connectToPeer(host, port) {
         const socket = net.connect(port, host, () => {
             console.log(`Connected to peer ${host}:${port}`);
+            // 保存目标主机和端口信息
+            socket.targetHost = host;
+            socket.targetPort = port;
             this.initConnection(socket); // 初始化连接
         })
 
@@ -62,9 +70,16 @@ class PeerToPeer {
     initConnection(connection) {
         // 检查是否已经连接过这个对等节点
         const existingPeer = this.peers.find(peer => {
-            peer.remoteAddress === connection.remoteAddress && peer.remotePort === connection.remotePort
+            return peer.remoteAddress === connection.remoteAddress && peer.remotePort === connection.remotePort
         });
         if (!existingPeer) {
+            // 记录节点的连接信息
+            connection.peerInfo = {
+                host: connection.targetHost || connection.remoteAddress,
+                port: connection.targetPort || connection.remotePort,
+                connectedAt: new Date()
+            };
+            
             this.peers.push(connection); // 添加到连接数组
             this.initMessageHandler(connection); // 初始化消息处理器
             this.initErrorHandler(connection); // 初始化错误处理器
