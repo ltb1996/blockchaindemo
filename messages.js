@@ -3,7 +3,8 @@ const {
     REQUEST_LATEST_BLOCK,
     RECEIVE_LATEST_BLOCK,
     REQUEST_LATEST_BLOCKCHAIN,
-    RECEIVE_LATEST_BLOCKCHAIN
+    RECEIVE_LATEST_BLOCKCHAIN,
+    HANDSHAKE
 } = messageType;
 class Messages {
     // 请求最新区块的消息函数
@@ -30,6 +31,13 @@ class Messages {
         return {
             type: RECEIVE_LATEST_BLOCKCHAIN,
             data: blockchain
+        };
+    }
+    // 发送握手消息，包含本节点的监听端口
+    static sendHandshake(port) {
+        return {
+            type: HANDSHAKE,
+            data: { port }
         };
     }
 }

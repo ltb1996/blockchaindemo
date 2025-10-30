@@ -5,7 +5,8 @@ const {
     REQUEST_LATEST_BLOCK,
     RECEIVE_LATEST_BLOCK,
     REQUEST_BLOCKCHAIN,
-    RECEIVE_BLOCKCHAIN
+    RECEIVE_BLOCKCHAIN,
+    HANDSHAKE
 } = messageType;
 
 class PeerToPeer {
@@ -13,9 +14,11 @@ class PeerToPeer {
     constructor(blcokchain) {
         this.peers = []; // 存储已连接的节点
         this.blockchain = blcokchain; // 引用区块链实例
+        this.serverPort = null; // 存储本节点的监听端口
     }
     // 启动服务器监听指定端口
     startServer(port) {
+        this.serverPort = port; // 保存本节点的监听端口
         const server = net.createServer((socket) => {
             this.initConnection(socket); // 初始化新连接
         }).listen(port); // 监听指定端口
@@ -83,6 +86,12 @@ class PeerToPeer {
             this.peers.push(connection); // 添加到连接数组
             this.initMessageHandler(connection); // 初始化消息处理器
             this.initErrorHandler(connection); // 初始化错误处理器
+            
+            // 如果本节点已经启动了服务器，发送握手消息告知对方自己的监听端口
+            if (this.serverPort) {
+                this.write(connection, Messages.sendHandshake(this.serverPort));
+            }
+            
             this.write(connection, Messages.getLatestBlock()); // 发送最新区块的消息
             console.log(`New peer connected: ${connection.remoteAddress}:${connection.remotePort}`);
         }
@@ -121,12 +130,28 @@ class PeerToPeer {
     // 初始化错误处理器
     initErrorHandler(connection) {
         connection.on("error", err => {
-            throw err;
+            console.error(`Connection error: ${err.message}`);
+            // 从peers数组中移除断开的连接
+            this.peers = this.peers.filter(peer => peer !== connection);
+        });
+        
+        // 添加连接关闭处理器
+        connection.on("close", () => {
+            console.log(`Connection closed: ${connection.peerInfo?.host || connection.remoteAddress}:${connection.peerInfo?.port || connection.remotePort}`);
+            // 从peers数组中移除关闭的连接
+            this.peers = this.peers.filter(peer => peer !== connection);
         });
     }
     // 处理接收到的消息
     handleMessage(peer, message) {
         switch (message.type) {
+            case HANDSHAKE:
+                // 收到握手消息，更新对等节点的真实监听端口
+                if (message.data && message.data.port) {
+                    peer.peerInfo.port = message.data.port;
+                    console.log(`Received handshake from peer, updated port to ${message.data.port}`);
+                }
+                break;
             case REQUEST_LATEST_BLOCK:
                 // 当收到请求最新区块的消息时，发送最新区块
                 this.write(peer, Messages.sendLatestBlock(this.blockchain.latestBlock));

@@ -81,9 +81,16 @@ function peersCommand(vorpal) {
     // 定义命令执行逻辑
     .action(function(args, callback) {
       // 遍历所有已连接的节点并输出信息
-      p2p.peers.forEach(peer => {
-        this.log(`${peer.pxpPeer.socket._host} \n`)
-      }, this)
+      if (p2p.peers.length === 0) {
+        this.log('没有连接的节点');
+      } else {
+        this.log(`已连接的节点数量: ${p2p.peers.length}`);
+        p2p.peers.forEach((peer, index) => {
+          const host = peer.peerInfo?.host || peer.remoteAddress || 'unknown';
+          const port = peer.peerInfo?.port || peer.remotePort || 'unknown';
+          this.log(`[${index + 1}] ${host}:${port}`);
+        }, this)
+      }
       // 执行回调函数，结束命令执行
       callback();
     })
